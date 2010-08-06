@@ -1,0 +1,74 @@
+\section{一则示例}
+
+阅读这份教程时，或许你已经知道单子可能有多种解释。它们是个抽象结构，而第一个难点是它们到底可以用在哪。单子主要有两种解释：容器(container)和计算(computation)。这很好的解释了现有单子的用途，但就作者个人浅见，读者还是无法从中得知怎样辨识单子，而且这两种解释偶尔看起来不太兼容(虽然并非如此)。
+
+So I'm trying to provide you with an idea of monads, that is more generic and allows you to find familiar patterns in monad usage. Particularly it should make it easy to recognize monads as such. However, I won't give you a concrete notion yet. Let's start with a motivating example instead.
+
+比方说，你有个函数，但是它未必能返回一个结果，那么如何定义的它的类型呢？对整数求精确平方根是个好的例子，我们可以书写如下代码：
+
+\begin{lstlisting}
+isqrt :: Integer -> Integer
+\end{lstlisting}
+
+好了，那么$isqrt\ 3$的结果是什么？$isqrt\ (-5)$呢？我们如何处理计算没有结果的情况呢？第一个主意来自命令式编程世界，我们期望传入参数是个$Square$类型，否则便通过异常或者信号来终止程序的运行。我们说，假如参数不是一个$Square$值，则函数结果是个$\bot$或者$bottom$。
+
+$\bot$值是个理论概念。它可以作为函数的返回值，但对它求值将永远不会返回，因此你永远无法直接观察它的确切值。无穷递归函数和抛出异常的函数便是这方面的例子。两者都没有返回一个普通函数值。
+
+数学上来讲，如果非法参数根本就无法传入，这样的手段显然更为高明：
+
+\begin{lstlisting}
+isqrt :: Square -> Integer
+\end{lstlisting}
+
+第一眼看上去它的确能工作，但是假如我们需要计算一个整型值的平方根呢？这里我们需要首先将其转换成$Square$类型，于是我们又回到了老路上\footnote{译者注：如果此时给定一个负整数，转成$Square$类型后再计算会得到正数平方根。因此这里从负数变成$Square$是个无意义的计算。}。而且很多时候我们确实希望程序能处理这种没有结果的情况。于是我们可以写个包装类型$Maybe$：
+
+\begin{lstlisting}
+data Maybe a = Just a | Nothing
+\end{lstlisting}
+
+类型为$Maybe\ a$的值只可能二者取一：要么是$Nothing$，要么是$Just\ x$。这里$x$的类型是$a$。 比如，类型为$Maybe\ Integer$的值要么是$Nothing$，要么是$Just\ x$，而$x$的类型是$Integer$。现在我们修改一下整数平方根函数的类型，捎带其实现(虽然不是最理想的，但很容易看懂)如下：
+
+\begin{lstlisting}
+isqrt :: Integer -> Maybe Integer
+isqrt x = isqrt' x (0,0)
+  where
+    isqrt' x (s,r)
+      | s > x     = Nothing
+      | s == x    = Just r
+      | otherwise = isqrt' x (s + 2*r + 1, r+1)
+\end{lstlisting}
+
+由于$Nothing$是个有效返回值，我们的函数必须处理所有情况。下面是一些$isqrt$返回值的示例：
+
+\begin{lstlisting}
+isqrt 4  = Just 2
+isqrt 49 = Just 7
+isqrt 3  = Nothing
+\end{lstlisting}
+
+假如我们想求四次方根呢？既然已经有了个平方根函数，在此之上写个四次方根函数岂不是更酷？ 如果没有计算结果，我们可以照样返回$Nothing$。这个函数该怎么写呢？我很有信心您很快就会写出如下代码：
+
+\begin{lstlisting}
+i4throot :: Integer -> Maybe Integer
+i4throot x = case isqrt x of
+               Nothing -> Nothing
+               Just y  -> isqrt y
+\end{lstlisting}
+
+请尽可能的理解上述代码。它首先对传入参数求平方根。如果无解，自然四次方根也无解；如果有解，则再对其求一次平方根 -- 当然求值可能再次失败， 所以这是个$Maybe$计算，由两次$Maybe$计算所得。
+
+您理会其他包装类型，如列表，和它的相似性了吗？你可以用列表实现如下代码：
+
+\begin{lstlisting}
+isqrt :: Integer -> [Integer]
+isqrt = ...
+
+i4throot :: Integer -> [Integer]
+i4throot x = case isqrt x of
+               []  -> []
+               [x] -> isqrt x
+\end{lstlisting}
+
+当然，列表也允许多个求值结果，于是您甚至可以在$isqrt$中同时返回给定数值的两个平方根。你可以在$i4throot$中同样考虑这个因素，虽然现在$isqrt$只是返回一个平方根。
+
+The general idea is: You have some computation with a certain type of result and a certain structure in its result (like allowing no result, or allowing arbitrarily many results), and you want to pass that computation's result to another computation. Wouldn't it be great to have a nice generic syntax for this idea of combining computations, which are built from smaller computations, and which use such a wrapper type like Maybe or lists? It would be even better to abstract away certain structural properties of the result, so the fact that lists allow multiple values would be taken into account implicitly. We're approaching monads. 
