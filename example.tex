@@ -2,7 +2,7 @@
 
 阅读这份教程时，或许你已经知道单子可能有多种解释。它们是个抽象结构，而第一个难点是它们到底可以用在哪。单子主要有两种解释：容器(container)和计算(computation)。这很好的解释了现有单子的用途，但就作者个人浅见，读者还是无法从中得知怎样辨识单子，而且这两种解释偶尔看起来不太兼容(虽然并非如此)。
 
-So I'm trying to provide you with an idea of monads, that is more generic and allows you to find familiar patterns in monad usage. Particularly it should make it easy to recognize monads as such. However, I won't give you a concrete notion yet. Let's start with a motivating example instead.
+好了，我将试着为您提供单子背后的一般性思想。您会在使用单子时发现类似模式，尤其是，您将能很简单地辨识类似单子。我暂且先不去描述单子具体的表示，先从一个激发性的例子入手吧。
 
 比方说，你有个函数，但是它未必能返回一个结果，那么如何定义的它的类型呢？对整数求精确平方根是个好的例子，我们可以书写如下代码：
 
@@ -71,4 +71,4 @@ i4throot x = case isqrt x of
 
 当然，列表也允许多个求值结果，于是您甚至可以在$isqrt$中同时返回给定数值的两个平方根。你可以在$i4throot$中同样考虑这个因素，虽然现在$isqrt$只是返回一个平方根。
 
-The general idea is: You have some computation with a certain type of result and a certain structure in its result (like allowing no result, or allowing arbitrarily many results), and you want to pass that computation's result to another computation. Wouldn't it be great to have a nice generic syntax for this idea of combining computations, which are built from smaller computations, and which use such a wrapper type like Maybe or lists? It would be even better to abstract away certain structural properties of the result, so the fact that lists allow multiple values would be taken into account implicitly. We're approaching monads. 
+所有这些背后的一般性思想是：你有一些计算会返回某些类型的计算结果，它们包含着某些结构(比如，允许没有返回值，或者任意个返回值)，而且你还想把计算结果传递给给另一个计算。如果我们有一个通用的语法层来表达这种由小的计算单元得到复杂组合计算的思想，那岂不是更好？这些包装类型可以简单如上述$Maybe$或者列表，甚至我们还可以把计算结果的特定结构属性给抽象出去，使得列表中允许多返回值这样的事实已经隐式实现。我们正在接近单子的奥秘！
