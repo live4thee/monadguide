@@ -1,0 +1,21 @@
+\section{Monad的属性}
+\subsection{Monad定律}
+首先，要成为Monad，它必须遵守三个法则。除了范畴论的需要外，这三个法则也确实有意义：
+\begin{enumerate}
+\item $return\ x >>=  f \equiv f\ x$
+\item $c >>= return \equiv c$
+\item $c >>= (\backslash{}x \rightarrow f\ x >>= g) \equiv (c >>= f) >>= g$
+\end{enumerate}
+
+从绑定的角度来讲，第一条法则要求$return$是个左幺元。简单来说，它的意思是，$return$将$x$变成一个求值结果是$x$的计算，然后绑定至消费者函数$f$，这个过程等同于直接用$x$调用$f$。听起来很明显，不是吗？
+
+从绑定的角度来讲，第二条法则要求$return$是个右幺元。意思是，将一个源计算的结果$x$绑定至$return$函数（它会给出一个返回结果$x$的计算）等同于直接给出源计算(求值为$x$)。这应该和上一条法则一样显而易见。
+
+第三条法则要求绑定子函数$>>=$满足结合律。要明白该法则，我们先考虑一个返回给定整数三十次方根的计算（如果没有结果则返回$Nothing$）。你可以先求平方根，再依次求立方根和五次方根：
+
+\begin{lstlisting}
+i30throot :: Integer -> Maybe Integer
+i30throot x = isqrt x >>= icbrt >>= i5throot
+\end{lstlisting}
+
+你可以首先得到求六次方根的计算$(isqrt\ x >>= icbrt)$，然后将其结果传递给$i5throot$求五次方根；或者你可以先求平方根$(isqrt x)$，然后将其结果传递给求十五次方根的计算$(\backslash{}y \rightarrow icbrt\ y >>= i5throot)$。第三条法则要求这两种计算的最终结果是相同的。
